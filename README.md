@@ -1,0 +1,1 @@
+# glpi-fusioninventory-bash-install
