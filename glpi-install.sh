@@ -47,11 +47,11 @@ if [ "$DISTRO" == "Debian" ]; then
         else
                 warn "Your operating system version ($DISTRO $VERSION) is not noted as compatible."
                 warn "Do you still want to force the installation? Be careful, if you choose to force the script, it is at your own risk."
-                info "Are you sure you want to continue? [yes/no]"
+                info "Are you sure you want to continue? [Y/n]"
                 read response
-                if [ $response == "yes" ]; then
+                if [ $response == "Y" ]; then
                 info "Continuing..."
-                elif [ $response == "no" ]; then
+                elif [ $response == "n" ]; then
                 info "Exiting..."
                 exit 1
                 else
@@ -68,11 +68,11 @@ elif [ "$DISTRO" == "Ubuntu" ]; then
         else
                 warn "Your operating system version ($DISTRO $VERSION) is not noted as compatible."
                 warn "Do you still want to force the installation? Be careful, if you choose to force the script, it is at your own risk."
-                info "Are you sure you want to continue? [yes/no]"
+                info "Are you sure you want to continue? [Y/n]"
                 read response
-                if [ $response == "yes" ]; then
+                if [ $response == "Y" ]; then
                 info "Continuing..."
-                elif [ $response == "no" ]; then
+                elif [ $response == "n" ]; then
                 info "Exiting..."
                 exit 1
                 else
@@ -97,11 +97,11 @@ HOST=$(hostname)
 function confirm_installation()
 {
 warn "This script will now install the necessary packages for installing and configuring GLPI."
-info "Are you sure you want to continue? [yes/no]"
+info "Are you sure you want to continue? [Y/n]"
 read confirm
-if [ $confirm == "yes" ]; then
+if [ $confirm == "Y" ]; then
         info "Continuing..."
-elif [ $confirm == "no" ]; then
+elif [ $confirm == "n" ]; then
         info "Exiting..."
         exit 1
 else
@@ -224,6 +224,12 @@ function setup_db()
 info "Setting up GLPI..."
 cd /var/www/html/glpi
 php bin/console db:install --db-name=glpi --db-user=glpi_user --db-password=$SQLGLPIPWD --no-interaction
+#Sleep 1 because GLPI install latency
+sleep 1
+info "Installing and activating FusionIventory plugin"
+php bin/console glpi:plugin:install fusioninventory --username=glpi
+php bin/console glpi:plugin:activate fusioninventory
+
 rm -rf /var/www/html/glpi/install
 }
 
