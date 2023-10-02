@@ -28,7 +28,7 @@ fi
 function check_distro()
 {
 # Constante pour les versions de Debian acceptables
-DEBIAN_VERSIONS=("11")
+DEBIAN_VERSIONS=("11","12")
 
 # Constante pour les versions d'Ubuntu acceptables
 UBUNTU_VERSIONS=("22.04")
@@ -183,8 +183,8 @@ function install_glpi()
 info "Downloading and installing GLPI 10.0.6"
 # Get download link for the latest release
 DOWNLOADLINK=https://github.com/glpi-project/glpi/releases/download/10.0.6/glpi-10.0.6.tgz
-wget -O /tmp/glpi-latest.tgz $DOWNLOADLINK
-tar xzf /tmp/glpi-latest.tgz -C /var/www/html/
+wget -O /tmp/glpi-10.0.6.tgz $DOWNLOADLINK
+tar xzf /tmp/glpi-10.0.6.tgz -C /var/www/html/
 
 # Add permissions
 chown -R www-data:www-data /var/www/html/glpi
@@ -198,17 +198,18 @@ tar xf /tmp/fusioninventory.tgz -C /var/www/html/glpi/marketplace
 # Setup vhost
 cat > /etc/apache2/sites-available/000-default.conf << EOF
 <VirtualHost *:80>
-        DocumentRoot /var/www/html/glpi
-
-        <Directory /var/www/html/glpi>
-                AllowOverride All
-                Order Allow,Deny
-                Allow from all
+       DocumentRoot /var/www/html/glpi/  
+       <Directory /var/www/html/glpi/>
+                Require all granted
+                RewriteEngine On
+                RewriteCond %{REQUEST_FILENAME} !-f
+                RewriteRule ^(.*)$ index.php [QSA,L]
         </Directory>
-
-        ErrorLog /var/log/apache2/error-glpi.log
+        
         LogLevel warn
-        CustomLog /var/log/apache2/access-glpi.log combined
+        ErrorLog \${APACHE_LOG_DIR}/error-glpi.log
+        CustomLog \${APACHE_LOG_DIR}/access-glpi.log combined
+        
 </VirtualHost>
 EOF
 
@@ -220,7 +221,7 @@ echo "ServerTokens Prod" >> /etc/apache2/apache2.conf
 echo "*/2 * * * * www-data /usr/bin/php /var/www/html/glpi/front/cron.php &>/dev/null" >> /etc/cron.d/glpi
 
 #Activation du module rewrite d'apache
-a2enmod rewrite && service apache2 restart
+a2enmod rewrite && systemctl restart apache2
 }
 
 function setup_db()
